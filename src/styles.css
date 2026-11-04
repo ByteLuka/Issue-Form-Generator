@@ -1,0 +1,80 @@
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--mantine-color-body);
+}
+
+/* Highlight an element card briefly when it is clicked from the validation list. */
+@keyframes flash {
+  from {
+    box-shadow: 0 0 0 3px var(--mantine-primary-color-filled);
+  }
+  to {
+    box-shadow: 0 0 0 3px transparent;
+  }
+}
+
+.flash {
+  animation: flash 1.2s ease-out;
+}
+
+/* Hover state for the element type picker. */
+.type-option {
+  transition:
+    border-color 120ms,
+    background-color 120ms;
+}
+
+.type-option:hover {
+  border-color: var(--mantine-primary-color-filled);
+  background-color: var(--mantine-primary-color-light);
+}
+
+/* YAML syntax colors (highlight.js tokens), modelled on GitHub's light and dark themes. */
+:root {
+  --hl-key: #116329;
+  --hl-string: #0a3069;
+  --hl-literal: #0550ae;
+  --hl-punctuation: #6e7781;
+  --hl-comment: #6e7781;
+}
+
+[data-mantine-color-scheme='dark'] {
+  --hl-key: #7ee787;
+  --hl-string: #a5d6ff;
+  --hl-literal: #79c0ff;
+  --hl-punctuation: #8b949e;
+  --hl-comment: #8b949e;
+}
+
+.hljs-attr,
+.hljs-name,
+.hljs-section {
+  color: var(--hl-key);
+}
+
+.hljs-string,
+.hljs-template-variable {
+  color: var(--hl-string);
+}
+
+.hljs-number,
+.hljs-literal,
+.hljs-type {
+  color: var(--hl-literal);
+}
+
+.hljs-bullet,
+.hljs-meta,
+.hljs-punctuation {
+  color: var(--hl-punctuation);
+}
+
+.hljs-comment {
+  color: var(--hl-comment);
+  font-style: italic;
+}

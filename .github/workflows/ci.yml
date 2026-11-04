@@ -32,6 +32,31 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  commitlint:
+    name: Conventional commits
+    # Commit messages drive semantic versioning (release-please), so they are checked on every PR.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint commit messages
+        run: npx commitlint --from "${{ github.event.pull_request.base.sha }}" --to "${{ github.event.pull_request.head.sha }}" --verbose
+
+      - name: Lint pull request title (used as commit message for squash merges)
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: printf '%s\n' "$PR_TITLE" | npx commitlint --verbose
+
   dependency-review:
     name: Dependency review
     # Free for public repositories. Fails on pull requests that add dependencies with known vulnerabilities.

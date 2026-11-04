@@ -1,4 +1,14 @@
-import { ActionIcon, Button, Group, Menu, Text, ThemeIcon, Title, Tooltip } from '@mantine/core';
+import {
+  ActionIcon,
+  Badge,
+  Button,
+  Group,
+  Menu,
+  Text,
+  ThemeIcon,
+  Title,
+  Tooltip,
+} from '@mantine/core';
 import { useDisclosure, useMediaQuery } from '@mantine/hooks';
 import { modals } from '@mantine/modals';
 import {
@@ -51,6 +61,26 @@ export function Header() {
         <Title order={1} size="h4" visibleFrom="xs">
           Issue Form Generator
         </Title>
+        <Tooltip label={__REPO_URL__ ? 'Release notes' : 'Version'}>
+          <Badge
+            variant="light"
+            color="gray"
+            size="sm"
+            visibleFrom="sm"
+            tt="none"
+            {...(__REPO_URL__
+              ? {
+                  component: 'a' as const,
+                  href: `${__REPO_URL__}/releases/tag/v${__APP_VERSION__}`,
+                  target: '_blank',
+                  rel: 'noreferrer',
+                  style: { cursor: 'pointer' },
+                }
+              : {})}
+          >
+            v{__APP_VERSION__}
+          </Badge>
+        </Tooltip>
       </Group>
 
       <Group gap="xs" wrap="nowrap">

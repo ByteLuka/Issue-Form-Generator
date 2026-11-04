@@ -6,23 +6,26 @@ with a graphical editor and get the YAML as you type. Runs entirely in the brows
 ## Features
 
 - **Split view**: guided editor on the left, live YAML and a GitHub-style preview on the right (resizable).
+- **Several templates at once**: switch between them with tabs, set custom file names to control their order,
+  and **download everything as a zip** with the `.github/ISSUE_TEMPLATE/` folder structure.
+- **Template chooser (`config.yml`)**: allow or disable blank issues, add contact links, preview the chooser page.
 - **Guided element creation**: click **Add element**, pick a type, then configure it step by step
   (Basics → Defaults / Options / File types → Validation).
 - All element types: `markdown`, `input`, `textarea`, `dropdown`, `checkboxes`, `upload`,
   plus all top-level keys (`name`, `description`, `title`, `labels`, `assignees`, `projects`, `type`).
 - Drag & drop reordering, duplicate, delete with undo.
 - **Validation** against GitHub's form schema (duplicate ids, missing labels, dropdown defaults with "None", …).
-- **Import** existing templates (paste or upload).
+- **Import** existing templates and `config.yml` (paste or upload several files).
 - **Starter templates**: bug report, feature request, documentation.
 - **Auto-save** in the browser (localStorage). Nothing is sent to a server.
 - Light, dark and system color scheme.
-- Copy or download the YAML; the suggested path is `.github/ISSUE_TEMPLATE/<name>.yml`.
+- Copy or download a single file, or all files as a zip.
 
 ## Tech stack
 
 [React](https://react.dev) · [TypeScript](https://www.typescriptlang.org) · [Vite](https://vite.dev) ·
 [Mantine](https://mantine.dev) · [Zustand](https://zustand.docs.pmnd.rs) · [dnd-kit](https://dndkit.com) ·
-[yaml](https://eemeli.org/yaml) · [Vitest](https://vitest.dev)
+[yaml](https://eemeli.org/yaml) · [JSZip](https://stuk.github.io/jszip/) · [Vitest](https://vitest.dev)
 
 ## Development
 
@@ -45,11 +48,11 @@ in CI), because they determine the next version. See [CONTRIBUTING.md](CONTRIBUT
 
 ```
 src/
-├── lib/              # framework-free logic: model, YAML generation/import, validation, templates
-├── store/            # Zustand store (persisted to localStorage) and hooks
+├── lib/              # framework-free logic: model, YAML generation/import, validation, files & zip
+├── store/            # workspace store (persisted to localStorage) and hooks
 ├── components/
-│   ├── editor/       # form settings, element list, type picker, step-by-step element dialog
-│   └── output/       # YAML view, preview, validation summary
+│   ├── editor/       # template tabs, form settings, elements, step-by-step dialog, config.yml editor
+│   └── output/       # YAML view, form and template chooser previews, validation summary
 ├── App.tsx           # layout (split view / mobile tabs)
 └── main.tsx          # providers (Mantine, modals, notifications, code highlighting)
 ```

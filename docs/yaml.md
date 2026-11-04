@@ -1,6 +1,6 @@
 # YAML generation, import & validation
 
-All three live in `src/lib` and are pure functions without React.
+All of this lives in `src/lib` and consists of pure functions without React.
 
 ## Generation — [`serialize.ts`](../src/lib/serialize.ts)
 
@@ -23,15 +23,31 @@ Output rules:
 - Strings that need quoting (e.g. starting with `#` or containing `: `) are quoted automatically by the `yaml` library.
 - An empty line separates body elements for readability.
 
+## Files and zip — [`workspace.ts`](../src/lib/workspace.ts)
+
+| Function                       | Returns                                                                                 |
+| ------------------------------ | --------------------------------------------------------------------------------------- |
+| `templateFileNames(templates)` | File name per template (see [data model](data-model.md#file-names))                     |
+| `workspaceFiles(workspace)`    | `{ path, content }[]` under `.github/ISSUE_TEMPLATE/`; `config.yml` only if not default |
+| `buildZip(workspace)`          | `Promise<Blob>` of all files; JSZip is imported dynamically on first use                |
+
 ## Import — [`parse.ts`](../src/lib/parse.ts)
 
-`yamlToForm(source)` returns `{ form, warnings }` or throws `ImportError`.
+| Function               | Returns                                                                      |
+| ---------------------- | ---------------------------------------------------------------------------- |
+| `parseImport(source)`  | `{ kind: 'form', form, warnings }` or `{ kind: 'config', config, warnings }` |
+| `yamlToForm(source)`   | `{ form, warnings }` for an issue form                                       |
+| `yamlToConfig(source)` | `{ config, warnings }` for a `config.yml`                                    |
+
+`parseImport` treats a file as `config.yml` when it has no `body` but `blank_issues_enabled` or `contact_links`.
+All functions throw `ImportError` for unusable input.
 
 Throws when:
 
 - the YAML cannot be parsed,
 - the root is not a map,
-- `body` exists but is not a list.
+- `body` exists but is not a list,
+- `contact_links` exists but is not a list.
 
 Lenient behavior (each produces a warning where something is dropped):
 
@@ -42,19 +58,31 @@ Lenient behavior (each produces a warning where something is dropped):
 - `min_length` / `default` are kept only if they are non-negative integers.
 - Checkbox options given as plain strings are converted to `{ label, required: false }`.
 
-New `uid`s are generated for every imported element.
+- A missing `blank_issues_enabled` means enabled, as on GitHub.
+- Unknown keys in `config.yml` and its contact links are ignored → warning.
+
+New `uid`s are generated for every imported element and contact link.
 
 ## Validation — [`validate.ts`](../src/lib/validate.ts)
 
-`validateForm(form)` returns `ValidationIssue[]`:
+| Function                       | Checks                                                                    |
+| ------------------------------ | ------------------------------------------------------------------------- |
+| `validateForm(form)`           | One issue form                                                            |
+| `validateConfig(config)`       | `config.yml`                                                              |
+| `validateWorkspace(workspace)` | All of the above plus rules across templates; sets `scope` on every issue |
+
+All return `ValidationIssue[]`:
 
 ```ts
 interface ValidationIssue {
   level: 'error' | 'warning'; // error = GitHub rejects the template, warning = likely mistake
   message: string;
-  elementUid?: string; // undefined for form-level issues
+  elementUid?: string; // element or contact link; undefined for file-level issues
+  scope?: string; // template uid or CONFIG_SCOPE ('config'), set by validateWorkspace
 }
 ```
+
+The UI runs `validateWorkspace` once per change and filters by `scope`.
 
 | Level   | Rule                                                               |
 | ------- | ------------------------------------------------------------------ |
@@ -81,6 +109,7 @@ The element dialog additionally blocks _Next_/_Save_ for the subset of rules tha
 
 ## Tests
 
-[`src/lib/lib.test.ts`](../src/lib/lib.test.ts) covers omission of empty keys, multi-line output, quoting,
-round-trips (`formToYaml` → `yamlToForm`) of every starter template, lenient import, import errors and the
-validation rules.
+- [`src/lib/lib.test.ts`](../src/lib/lib.test.ts): omission of empty keys, multi-line output, quoting, round-trips
+  (`formToYaml` → `yamlToForm`) of every starter template, lenient import, import errors and validation rules.
+- [`src/lib/workspace.test.ts`](../src/lib/workspace.test.ts): file names, exported files, zip content, `config.yml`
+  generation/import/validation, import detection and workspace-wide validation.

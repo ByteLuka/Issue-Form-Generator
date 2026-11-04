@@ -40,9 +40,19 @@ the next version — see [Releasing & versioning](releasing.md).
 
 ## Testing
 
-- Unit tests live next to the code (`*.test.ts`) and run in jsdom.
-- `src/lib` must stay fully covered by tests: every serializer/parser/validator change needs a test.
-- `@testing-library/react` and `@testing-library/jest-dom` are set up (`src/test/setup.ts`) for component tests.
+| Kind      | Where                          | What                                                 |
+| --------- | ------------------------------ | ---------------------------------------------------- |
+| Unit      | `src/lib/*.test.ts`            | YAML generation, import, validation, file names, zip |
+| Store     | `src/store/*.test.ts`          | Actions, active-template behavior, storage migration |
+| Component | `src/components/**/*.test.tsx` | User flows, e.g. the guided element dialog           |
+
+- Tests run in jsdom with Vitest. `src/test/setup.ts` adds jest-dom matchers, cleans up after each test and stubs
+  browser APIs that jsdom lacks (`matchMedia`, `ResizeObserver`, `document.fonts`, `scrollIntoView`).
+- Render components with `renderWithProviders` from `src/test/render.tsx`. It wraps them in `MantineProvider`
+  with `env="test"` (no transitions, no portals) and returns a `user` from `@testing-library/user-event`.
+- Query like a user would: by role and accessible name (`getByRole('button', { name: 'Next' })`).
+- Reset the store in `beforeEach` with `useWorkspaceStore.getState().resetWorkspace()`.
+- `src/lib` must stay fully covered: every serializer/parser/validator change needs a test.
 
 ## How to add a new element type
 
@@ -59,7 +69,8 @@ GitHub occasionally adds new element types (e.g. `upload`). Checklist:
 8. **Card summary** — `summary()` in `ElementCard.tsx`.
 9. **Preview** — case in `PreviewElement` in `FormPreview.tsx`.
 10. **Tests** — round-trip and validation tests in `src/lib/lib.test.ts`; optionally add it to a starter template.
-11. **Docs** — update [data-model.md](data-model.md) and [yaml.md](yaml.md).
+11. **Component test** — extend `src/components/editor/ElementDialog.test.tsx` if the type has its own step.
+12. **Docs** — update [data-model.md](data-model.md) and [yaml.md](yaml.md).
 
 TypeScript's exhaustive `switch` statements point out most places you missed.
 

@@ -1,5 +1,5 @@
 # Dependabot version updates. Security alerts and security updates are enabled separately in
-# Settings → Code security (free for public repositories).
+# Settings → Advanced Security (free for public repositories).
 version: 2
 updates:
   - package-ecosystem: npm
@@ -10,7 +10,11 @@ updates:
     open-pull-requests-limit: 10
     labels: [dependencies]
     commit-message:
-      prefix: deps
+      # Runtime dependency updates ship to users, so they create a patch release (fix).
+      # Dev dependency updates do not change the site (chore => no release).
+      prefix: fix
+      prefix-development: chore
+      include: scope
     groups:
       # One PR per family keeps the noise down; versions inside a family must match anyway.
       mantine:
@@ -38,6 +42,7 @@ updates:
     labels: [dependencies]
     commit-message:
       prefix: ci
+      include: scope
     groups:
       actions:
         patterns: ['*']

@@ -1,15 +1,24 @@
 /// <reference types="vitest/config" />
 import react from '@vitejs/plugin-react';
+import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
 
 // Set by GitHub Actions, used for the "View on GitHub" link in the header.
 const repository = process.env.GITHUB_REPOSITORY;
+
+// The version is managed by release-please (see docs/releasing.md) and shown in the header.
+const { version } = JSON.parse(
+  readFileSync(new URL('./package.json', import.meta.url), 'utf8'),
+) as {
+  version: string;
+};
 
 // `base: './'` makes the build work on any GitHub Pages path (user, org or project site).
 export default defineConfig({
   base: './',
   plugins: [react()],
   define: {
+    __APP_VERSION__: JSON.stringify(version),
     __REPO_URL__: JSON.stringify(repository ? `https://github.com/${repository}` : ''),
   },
   build: {

@@ -1,0 +1,43 @@
+# Dependabot version updates. Security alerts and security updates are enabled separately in
+# Settings → Code security (free for public repositories).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    labels: [dependencies]
+    commit-message:
+      prefix: deps
+    groups:
+      # One PR per family keeps the noise down; versions inside a family must match anyway.
+      mantine:
+        patterns: ['@mantine/*']
+      react:
+        patterns: [react, react-dom, '@types/react', '@types/react-dom']
+      dnd-kit:
+        patterns: ['@dnd-kit/*']
+      lint-and-format:
+        patterns: [eslint, '@eslint/*', 'eslint-plugin-*', typescript-eslint, globals, prettier]
+      testing:
+        patterns: [vitest, jsdom, '@testing-library/*']
+      build:
+        patterns: [vite, '@vitejs/*', postcss, 'postcss-*']
+    ignore:
+      # typescript-eslint does not support TypeScript 7 yet. Remove once it does.
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels: [dependencies]
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns: ['*']

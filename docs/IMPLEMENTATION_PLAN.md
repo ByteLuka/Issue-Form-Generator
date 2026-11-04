@@ -57,6 +57,8 @@ This file is updated after every implementation step.
 - [x] **10. Import YAML** — modal with paste/upload, parse errors shown.
 - [x] **11. CI/CD** — GitHub Actions: CI (lint, typecheck, test, build) + Pages deploy; Dependabot config.
 - [x] **12. Docs & polish** — README, final review, manual check in browser.
+- [x] **13. Semantic versioning** — Conventional Commits (commitlint + husky + CI), release-please, CHANGELOG, version in UI.
+- [x] **14. Developer documentation** — `docs/` folder with architecture, model, YAML, state, UI, development, releasing, deployment.
 
 ## Progress log
 
@@ -93,6 +95,15 @@ This file is updated after every implementation step.
   preview, reload persistence, import with warnings, delete + undo; no console errors.
   Known: `npm audit` reports a moderate `minimatch` advisory in ESLint dev tooling only (not shipped); the only
   automatic fix downgrades ESLint, so it is left for Dependabot.
+
+- **Step 13** — SemVer via release-please (`release-please-config.json`, `.release-please-manifest.json`,
+  `.github/workflows/release.yml`), starting at 1.0.0 with a hand-written `CHANGELOG.md` entry and local tag `v1.0.0`.
+  Conventional Commits enforced by husky `commit-msg` hook + commitlint, and in CI (PR commits and PR title).
+  Dependabot uses `fix(deps)` (runtime → patch release) / `chore(deps)` (dev → no release) / `ci(deps)`.
+  Version injected at build time (`__APP_VERSION__`) and shown as a badge in the header, linking to the release.
+- **Step 14** — `docs/`: index, architecture (with Mermaid diagram), data model, YAML generation/import/validation,
+  state & persistence, UI components, development guide (incl. "add a new element type" checklist), releasing,
+  CI/CD & deployment. `CONTRIBUTING.md` added; README links to the docs.
 
 ## Possible next steps
 

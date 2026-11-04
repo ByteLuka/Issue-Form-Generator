@@ -38,6 +38,9 @@ npm run format       # Prettier
 npm run build        # production build in dist/
 ```
 
+Commit messages must follow [Conventional Commits](https://www.conventionalcommits.org) (checked by a git hook and
+in CI), because they determine the next version. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ### Project structure
 
 ```
@@ -51,6 +54,18 @@ src/
 └── main.tsx          # providers (Mantine, modals, notifications, code highlighting)
 ```
 
+## Documentation
+
+Detailed developer documentation lives in [`docs/`](docs/README.md): architecture, data model, YAML generation and
+validation, state, UI components, development guide, releasing and deployment.
+
+## Versioning
+
+The project uses [Semantic Versioning](https://semver.org). Releases are automated with
+[release-please](https://github.com/googleapis/release-please): it derives the next version from Conventional
+Commits, maintains a release pull request with the updated [CHANGELOG.md](CHANGELOG.md), and creates the tag and
+GitHub release when that pull request is merged. Details: [docs/releasing.md](docs/releasing.md).
+
 ## Deployment (GitHub Pages)
 
 The workflow in [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) builds and deploys on every push to `main`.
@@ -59,6 +74,7 @@ One-time setup in the repository settings:
 
 1. **Settings → Pages → Build and deployment → Source: GitHub Actions.**
 2. On the GitHub Free plan, Pages is only available for **public** repositories.
+3. **Settings → Actions → General → Allow GitHub Actions to create and approve pull requests** (for release-please).
 
 The build uses relative asset paths, so it works for both `<user>.github.io` and `<user>.github.io/<repo>`.
 
@@ -68,4 +84,6 @@ The build uses relative asset paths, so it works for both `<user>.github.io` and
 - Enable **Dependabot alerts** and **Dependabot security updates** in **Settings → Advanced Security**
   (free for public repositories).
 - Optional: enable **CodeQL → Default setup** in the same place for code scanning (free for public repositories).
-- Pull requests run CI (format, lint, typecheck, tests, build) and a dependency review.
+- Pull requests run CI (format, lint, typecheck, tests, build), a commit message check and a dependency review.
+
+See [docs/deployment.md](docs/deployment.md) for the full settings checklist.

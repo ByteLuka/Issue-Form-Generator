@@ -95,3 +95,12 @@ export function formToYaml(form: IssueForm): string {
 
   return doc.toString({ lineWidth: 0, blockQuote: 'literal', flowCollectionPadding: false });
 }
+
+/** YAML for a single body element, as it appears inside `body:`. Used for the dialog preview. */
+export function elementToYaml(element: FormElement): string {
+  return new Document([elementToPlain(element)]).toString({
+    lineWidth: 0,
+    blockQuote: 'literal',
+    flowCollectionPadding: false,
+  });
+}

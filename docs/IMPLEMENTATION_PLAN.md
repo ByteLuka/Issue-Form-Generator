@@ -8,14 +8,14 @@ This file is updated after every implementation step.
 ## Research summary
 
 - **Issue form schema** (`.github/ISSUE_TEMPLATE/*.yml`)
-  - Top level: `name`*, `description`*, `body`*, `title`, `labels`, `assignees`, `projects` (`OWNER/NUMBER`), `type`.
+  - Top level: `name`_, `description`_, `body`*, `title`, `labels`, `assignees`, `projects` (`OWNER/NUMBER`), `type`.
   - Body element types: `markdown`, `input`, `textarea`, `dropdown`, `checkboxes`, `upload`.
   - `id`: optional, `[A-Za-z0-9_-]`, unique in the form, not allowed on `markdown`.
   - `input`/`textarea`: `label`*, `description`, `placeholder`, `value`; textarea also `render` (Linguist language).
     Validations `required`, `min_length`.
-  - `dropdown`: `label`*, `description`, `multiple`, `options`* (distinct strings), `default` (index; options may then not contain "None").
+  - `dropdown`: `label`_, `description`, `multiple`, `options`_ (distinct strings), `default` (index; options may then not contain "None").
     Validations `required`.
-  - `checkboxes`: `label`*, `description`, `options`* (`{label, required}`). Validations `required`.
+  - `checkboxes`: `label`_, `description`, `options`_ (`{label, required}`). Validations `required`.
   - `upload`: `label`*, `description`. Validations `required`, `accept` (comma-separated extensions).
   - `required` validations only take effect in public repositories.
 - **Hosting**: GitHub Pages via the official `actions/deploy-pages` workflow. On the free plan Pages works for public repositories only.
@@ -23,17 +23,17 @@ This file is updated after every implementation step.
 
 ## Tech stack
 
-| Concern | Choice |
-| --- | --- |
-| Build | Vite 8 + TypeScript 6 |
-| UI | React 19 + Mantine 9 (light / dark / auto via `MantineProvider` color scheme) |
-| Icons | Tabler Icons |
-| State | Zustand (with `persist` middleware → localStorage auto-save) |
-| Drag & drop | dnd-kit |
-| YAML | `yaml` (eemeli/yaml) for both generating and importing |
-| Highlighting | `@mantine/code-highlight` |
-| Preview markdown | `react-markdown` |
-| Quality | ESLint (typescript-eslint), Prettier, Vitest |
+| Concern          | Choice                                                                        |
+| ---------------- | ----------------------------------------------------------------------------- |
+| Build            | Vite 8 + TypeScript 6                                                         |
+| UI               | React 19 + Mantine 9 (light / dark / auto via `MantineProvider` color scheme) |
+| Icons            | Tabler Icons                                                                  |
+| State            | Zustand (with `persist` middleware → localStorage auto-save)                  |
+| Drag & drop      | dnd-kit                                                                       |
+| YAML             | `yaml` (eemeli/yaml) for both generating and importing                        |
+| Highlighting     | `@mantine/code-highlight`                                                     |
+| Preview markdown | `react-markdown`                                                              |
+| Quality          | ESLint (typescript-eslint), Prettier, Vitest                                  |
 
 ## Design decisions (agreed with the user)
 
@@ -47,16 +47,16 @@ This file is updated after every implementation step.
 
 - [x] **1. Scaffold** — Vite + React + TS, Mantine, ESLint, Prettier, Vitest, scripts, `.gitignore`.
 - [x] **2. Domain model** — types for form + elements, YAML serializer, YAML importer, validator, starter templates; unit tests.
-- [ ] **3. State** — Zustand store with persistence (form metadata, elements CRUD, reorder, duplicate, reset, load).
-- [ ] **4. App shell** — header (logo, templates, import, reset, color scheme toggle light/dark/auto, GitHub link), responsive split view.
-- [ ] **5. Form settings editor** — name, description, title, labels, assignees, projects, type.
-- [ ] **6. Element list** — sortable cards (dnd-kit) with edit / duplicate / delete, `+` button.
-- [ ] **7. Guided add/edit dialog** — type picker + stepper per element type.
-- [ ] **8. Output panel** — tabs YAML / Preview, highlighted YAML, copy, download, validation warnings.
-- [ ] **9. GitHub-style preview** — render form like GitHub does.
-- [ ] **10. Import YAML** — modal with paste/upload, parse errors shown.
-- [ ] **11. CI/CD** — GitHub Actions: CI (lint, typecheck, test, build) + Pages deploy; Dependabot config.
-- [ ] **12. Docs & polish** — README, final review, manual check in browser.
+- [x] **3. State** — Zustand store with persistence (form metadata, elements CRUD, reorder, duplicate, reset, load).
+- [x] **4. App shell** — header (logo, templates, import, reset, color scheme toggle light/dark/auto, GitHub link), responsive split view.
+- [x] **5. Form settings editor** — name, description, title, labels, assignees, projects, type.
+- [x] **6. Element list** — sortable cards (dnd-kit) with edit / duplicate / delete, `+` button.
+- [x] **7. Guided add/edit dialog** — type picker + stepper per element type.
+- [x] **8. Output panel** — tabs YAML / Preview, highlighted YAML, copy, download, validation warnings.
+- [x] **9. GitHub-style preview** — render form like GitHub does.
+- [x] **10. Import YAML** — modal with paste/upload, parse errors shown.
+- [x] **11. CI/CD** — GitHub Actions: CI (lint, typecheck, test, build) + Pages deploy; Dependabot config.
+- [x] **12. Docs & polish** — README, final review, manual check in browser.
 
 ## Progress log
 
@@ -66,3 +66,37 @@ This file is updated after every implementation step.
   empty optional keys omitted, blank line between body elements), `parse.ts` (import incl. comma-delimited lists and
   warnings for unknown keys), `validate.ts` (schema rules → errors / warnings), `templates.ts` (blank, bug,
   feature, docs). 13 unit tests incl. round-trip of all templates.
+- **Step 3** — `src/store/formStore.ts` (Zustand + `persist` → localStorage key `issue-form-generator:form`),
+  `src/store/hooks.ts` (`useIssueForm`, memoized `useValidation`).
+- **Step 4** — `AppShell` header with templates menu, import, clear, light/dark/system toggle (Mantine persists the
+  choice) and a GitHub link (repo URL injected at build time from `GITHUB_REPOSITORY`). Desktop uses Mantine's
+  resizable `Splitter`; below 62em a segmented control switches between editor and output. Header buttons become
+  icon-only below 48em.
+- **Step 5** — `FormSettingsEditor`: name, description, title, labels (tags), plus collapsible assignees, projects,
+  issue type.
+- **Step 6** — `ElementList` / `ElementCard`: dnd-kit sortable cards with badges (type, required, multiple, render),
+  inline validation indicator, edit / insert below / duplicate / delete (with Undo notification).
+- **Step 7** — `TypePickerModal` + `ElementDialog` with Mantine `Stepper`. Steps per type (`stepConfig.ts`); new
+  elements must pass each step, existing ones can jump and save anytime. Id is derived from the label until edited.
+  Option lists support Enter-to-add. Live "YAML for this element" accordion.
+- **Step 8** — `OutputPanel`: YAML/Preview tabs, copy, download (`<slug>.yml`), highlighted YAML with line numbers
+  (highlight.js, custom GitHub-like token colors for both schemes), `ValidationSummary` (click an issue to scroll to the
+  element). Vendor code split into `react` / `mantine` / `vendor` chunks.
+- **Step 9** — `FormPreview`: template chooser card, labels/type/assignees, title, and every element rendered like on
+  GitHub (Markdown via react-markdown + remark-gfm).
+- **Step 10** — `ImportModal`: paste or upload, errors inline, warnings in a notification, confirmation before
+  replacing a non-empty form.
+- **Step 11** — `.github/workflows/ci.yml` (format, lint, typecheck, test, build + dependency review on PRs),
+  `.github/workflows/deploy.yml` (Pages via `actions/deploy-pages`), `.github/dependabot.yml` (weekly grouped npm and
+  Actions updates; TypeScript majors ignored until typescript-eslint supports TS 7).
+- **Step 12** — README. Verified in headless Chromium (light, dark, mobile): template load, full add-dropdown flow,
+  preview, reload persistence, import with warnings, delete + undo; no console errors.
+  Known: `npm audit` reports a moderate `minimatch` advisory in ESLint dev tooling only (not shipped); the only
+  automatic fix downgrades ESLint, so it is left for Dependabot.
+
+## Possible next steps
+
+- Editor for `config.yml` (template chooser: `blank_issues_enabled`, `contact_links`).
+- Manage several templates at once and download them as a zip.
+- Shareable link that encodes the form in the URL.
+- Component tests for the dialog flow.

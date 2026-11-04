@@ -6,22 +6,39 @@ import {
   CopyButton,
   Divider,
   Group,
+  Menu,
   ScrollArea,
   Stack,
   Tabs,
   Text,
   Tooltip,
 } from '@mantine/core';
-import { IconCheck, IconCode, IconCopy, IconDownload, IconEye } from '@tabler/icons-react';
+import {
+  IconCheck,
+  IconCode,
+  IconCopy,
+  IconDownload,
+  IconEye,
+  IconFileZip,
+} from '@tabler/icons-react';
 import { useMemo, useState } from 'react';
-import { suggestFileName } from '../../lib/elements';
-import { formToYaml } from '../../lib/serialize';
-import { useIssueForm, useValidation } from '../../store/hooks';
+import { notifications } from '@mantine/notifications';
+import { configToYaml, formToYaml } from '../../lib/serialize';
+import {
+  buildZip,
+  CONFIG_FILE_NAME,
+  isDefaultConfig,
+  TEMPLATE_DIR,
+  templateFileNames,
+  workspaceFiles,
+} from '../../lib/workspace';
+import { useActiveTemplate, useValidation, useWorkspace } from '../../store/hooks';
+import { ChooserPreview } from './ChooserPreview';
 import { FormPreview } from './FormPreview';
 import { ValidationSummary } from './ValidationSummary';
 
-function download(fileName: string, content: string) {
-  const url = URL.createObjectURL(new Blob([content], { type: 'text/yaml' }));
+function download(fileName: string, content: Blob) {
+  const url = URL.createObjectURL(content);
   const link = document.createElement('a');
   link.href = url;
   link.download = fileName;
@@ -31,11 +48,28 @@ function download(fileName: string, content: string) {
 
 /** Right side of the split view: generated YAML and preview. */
 export function OutputPanel() {
-  const form = useIssueForm();
+  const workspace = useWorkspace();
+  const template = useActiveTemplate();
   const issues = useValidation();
-  const yaml = useMemo(() => formToYaml(form), [form]);
-  const fileName = suggestFileName(form.settings.name);
   const [tab, setTab] = useState<string | null>('yaml');
+
+  // Either the open template or config.yml.
+  const yaml = useMemo(
+    () => (template ? formToYaml(template) : configToYaml(workspace.config)),
+    [template, workspace.config],
+  );
+  const fileName = template
+    ? templateFileNames(workspace.templates)[workspace.templates.indexOf(template)]
+    : CONFIG_FILE_NAME;
+  const fileCount = workspaceFiles(workspace).length;
+
+  const downloadZip = async () => {
+    try {
+      download('issue-templates.zip', await buildZip(workspace));
+    } catch (error) {
+      notifications.show({ color: 'red', title: 'Download failed', message: String(error) });
+    }
+  };
 
   return (
     <Stack h="100%" gap={0}>
@@ -69,16 +103,26 @@ export function OutputPanel() {
                 </Tooltip>
               )}
             </CopyButton>
-            <Tooltip label={`Download ${fileName}`}>
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                onClick={() => download(fileName, yaml)}
-                aria-label="Download YAML"
-              >
-                <IconDownload size={16} />
-              </ActionIcon>
-            </Tooltip>
+            <Menu position="bottom-end">
+              <Menu.Target>
+                <Tooltip label="Download">
+                  <ActionIcon variant="subtle" color="gray" aria-label="Download">
+                    <IconDownload size={16} />
+                  </ActionIcon>
+                </Tooltip>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item
+                  leftSection={<IconDownload size={14} />}
+                  onClick={() => download(fileName, new Blob([yaml], { type: 'text/yaml' }))}
+                >
+                  {fileName}
+                </Menu.Item>
+                <Menu.Item leftSection={<IconFileZip size={14} />} onClick={downloadZip}>
+                  All files as .zip ({fileCount})
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
           </Group>
         </Group>
       </Tabs>
@@ -91,7 +135,13 @@ export function OutputPanel() {
           {tab === 'yaml' ? (
             <Stack gap={0}>
               <Text size="xs" c="dimmed" px="md" pt="sm">
-                Save as <Code fz="xs">.github/ISSUE_TEMPLATE/{fileName}</Code>
+                Save as{' '}
+                <Code fz="xs">
+                  {TEMPLATE_DIR}/{fileName}
+                </Code>
+                {!template && isDefaultConfig(workspace.config) && (
+                  <> (optional: these are GitHub's defaults)</>
+                )}
               </Text>
               <CodeHighlight
                 code={yaml}
@@ -102,8 +152,10 @@ export function OutputPanel() {
                 withFirstLineIndentation
               />
             </Stack>
-          ) : (
+          ) : template ? (
             <FormPreview />
+          ) : (
+            <ChooserPreview />
           )}
         </ScrollArea>
       </Box>

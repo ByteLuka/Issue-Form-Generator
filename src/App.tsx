@@ -1,4 +1,4 @@
-import { AppShell, Box, ScrollArea, SegmentedControl, Splitter, Stack } from '@mantine/core';
+import { AppShell, Box, SegmentedControl, Splitter, Stack } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { useState } from 'react';
 import { Editor } from './components/editor/Editor';
@@ -23,9 +23,7 @@ export function App() {
           {isWide ? (
             <Splitter h="100%">
               <Splitter.Pane defaultSize={55} min={30}>
-                <ScrollArea h="100%" type="auto">
-                  <Editor />
-                </ScrollArea>
+                <Editor />
               </Splitter.Pane>
               <Splitter.Pane defaultSize={45} min={25}>
                 <OutputPanel />
@@ -45,13 +43,7 @@ export function App() {
                 />
               </Box>
               <Box style={{ flex: 1, minHeight: 0 }}>
-                {mobileView === 'editor' ? (
-                  <ScrollArea h="100%" type="auto">
-                    <Editor />
-                  </ScrollArea>
-                ) : (
-                  <OutputPanel />
-                )}
+                {mobileView === 'editor' ? <Editor /> : <OutputPanel />}
               </Box>
             </Stack>
           )}

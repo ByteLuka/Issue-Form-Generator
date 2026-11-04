@@ -78,3 +78,7 @@ body {
   color: var(--hl-comment);
   font-style: italic;
 }
+
+.mono-input {
+  font-family: var(--mantine-font-family-monospace);
+}

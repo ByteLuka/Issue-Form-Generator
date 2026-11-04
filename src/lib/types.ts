@@ -101,3 +101,30 @@ export interface IssueForm {
 export function isField(element: FormElement): element is FieldElement {
   return element.type !== 'markdown';
 }
+
+/** One issue form file in `.github/ISSUE_TEMPLATE/`. */
+export interface Template extends IssueForm {
+  uid: string;
+  /** Custom file name, e.g. `1-bug.yml`. Empty means it is derived from the form name. */
+  fileName: string;
+}
+
+/** An entry of `contact_links` in `config.yml`. */
+export interface ContactLink {
+  uid: string;
+  name: string;
+  url: string;
+  about: string;
+}
+
+/** Content of `.github/ISSUE_TEMPLATE/config.yml` (the template chooser). */
+export interface ChooserConfig {
+  blankIssuesEnabled: boolean;
+  contactLinks: ContactLink[];
+}
+
+/** Everything the user is working on: all templates plus the template chooser config. */
+export interface Workspace {
+  templates: Template[];
+  config: ChooserConfig;
+}

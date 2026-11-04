@@ -11,14 +11,25 @@ import {
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { IconChevronDown, IconSettings } from '@tabler/icons-react';
-import { useFormStore } from '../../store/formStore';
+import { useMemo } from 'react';
+import { templateFileNames } from '../../lib/workspace';
+import { useIssueForm } from '../../store/hooks';
+import { useWorkspaceStore } from '../../store/workspaceStore';
+import { MONO_INPUT } from '../inputStyles';
 
 const SPLIT_CHARS = [',', ' '];
 
 /** Top-level keys of the issue form: name, description, title, labels, ... */
 export function FormSettingsEditor() {
-  const settings = useFormStore((state) => state.settings);
-  const update = useFormStore((state) => state.updateSettings);
+  const template = useIssueForm();
+  const { settings } = template;
+  const update = useWorkspaceStore((state) => state.updateSettings);
+  const setFileName = useWorkspaceStore((state) => state.setFileName);
+  const templates = useWorkspaceStore((state) => state.templates);
+  const fileName = useMemo(
+    () => templateFileNames(templates)[templates.findIndex((t) => t.uid === template.uid)],
+    [templates, template.uid],
+  );
   const [advancedOpened, advanced] = useDisclosure(
     settings.assignees.length > 0 || settings.projects.length > 0 || !!settings.type,
   );
@@ -34,7 +45,7 @@ export function FormSettingsEditor() {
         <SimpleGrid cols={{ base: 1, sm: 2 }}>
           <TextInput
             label="Name"
-            description="Shown in the template chooser. Must be unique."
+            description="Shown in the template chooser. Unique, more than 3 characters."
             placeholder="Bug report"
             required
             value={settings.name}
@@ -67,6 +78,20 @@ export function FormSettingsEditor() {
           clearable
           value={settings.labels}
           onChange={(labels) => update({ labels })}
+        />
+
+        <TextInput
+          label="File name"
+          description={
+            <>
+              Saved as <code>.github/ISSUE_TEMPLATE/{fileName}</code>. GitHub sorts templates by
+              file name, so prefix it with a number (e.g. <code>1-bug.yml</code>) to set the order.
+            </>
+          }
+          placeholder={template.fileName ? undefined : `${fileName} (from the name)`}
+          classNames={MONO_INPUT}
+          value={template.fileName}
+          onChange={(e) => setFileName(e.currentTarget.value)}
         />
 
         <UnstyledButton onClick={advanced.toggle} aria-expanded={advancedOpened}>

@@ -1,6 +1,12 @@
 import { parse } from 'yaml';
 import { createEmptySettings, createUid } from './elements';
-import { ELEMENT_TYPES, type ElementType, type FormElement, type IssueForm } from './types';
+import {
+  ELEMENT_TYPES,
+  type ChooserConfig,
+  type ElementType,
+  type FormElement,
+  type IssueForm,
+} from './types';
 
 export interface ParseResult {
   form: IssueForm;
@@ -118,6 +124,10 @@ function parseElement(raw: unknown, index: number, warnings: string[]): FormElem
 
 /** Parses issue form YAML into the editor model. Throws `ImportError` when it is unusable. */
 export function yamlToForm(source: string): ParseResult {
+  return mapToForm(parseMap(source));
+}
+
+function parseMap(source: string): Plain {
   let data: unknown;
   try {
     data = parse(source);
@@ -125,9 +135,14 @@ export function yamlToForm(source: string): ParseResult {
     throw new ImportError(`Invalid YAML: ${(error as Error).message}`);
   }
   if (!isPlain(data)) {
-    throw new ImportError('The YAML must be a map with at least "name", "description" and "body".');
+    throw new ImportError(
+      'The YAML must be a map: an issue form ("name", "description", "body") or a config.yml.',
+    );
   }
+  return data;
+}
 
+function mapToForm(data: Plain): ParseResult {
   const warnings: string[] = [];
   warnUnknownKeys(
     data,
@@ -154,4 +169,51 @@ export function yamlToForm(source: string): ParseResult {
     .filter((element): element is FormElement => element !== null);
 
   return { form: { settings, elements }, warnings };
+}
+
+export interface ConfigParseResult {
+  config: ChooserConfig;
+  warnings: string[];
+}
+
+function mapToConfig(data: Plain): ConfigParseResult {
+  const warnings: string[] = [];
+  warnUnknownKeys(data, ['blank_issues_enabled', 'contact_links'], 'config.yml', warnings);
+
+  if (data.contact_links !== undefined && !Array.isArray(data.contact_links)) {
+    throw new ImportError('"contact_links" must be a list.');
+  }
+  const links = Array.isArray(data.contact_links) ? data.contact_links : [];
+  const contactLinks = links.flatMap((raw, index) => {
+    if (!isPlain(raw)) {
+      warnings.push(`contact_links[${index}]: not a map, skipped.`);
+      return [];
+    }
+    warnUnknownKeys(raw, ['name', 'url', 'about'], `contact_links[${index}]`, warnings);
+    return [{ uid: createUid(), name: str(raw.name), url: str(raw.url), about: str(raw.about) }];
+  });
+
+  return {
+    // GitHub treats a missing value as "enabled".
+    config: { blankIssuesEnabled: data.blank_issues_enabled !== false, contactLinks },
+    warnings,
+  };
+}
+
+/** Parses a `config.yml` for the template chooser. Throws `ImportError` when it is unusable. */
+export function yamlToConfig(source: string): ConfigParseResult {
+  return mapToConfig(parseMap(source));
+}
+
+export type ImportResult =
+  ({ kind: 'form' } & ParseResult) | ({ kind: 'config' } & ConfigParseResult);
+
+/** Parses either an issue form or a `config.yml`, detected by its keys. */
+export function parseImport(source: string): ImportResult {
+  const data = parseMap(source);
+  const looksLikeConfig =
+    data.body === undefined && ('blank_issues_enabled' in data || 'contact_links' in data);
+  return looksLikeConfig
+    ? { kind: 'config', ...mapToConfig(data) }
+    : { kind: 'form', ...mapToForm(data) };
 }

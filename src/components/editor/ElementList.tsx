@@ -19,8 +19,8 @@ import { IconLayoutList, IconPlus } from '@tabler/icons-react';
 import { useState } from 'react';
 import { createElement } from '../../lib/elements';
 import type { ElementType, FormElement } from '../../lib/types';
-import { useFormStore } from '../../store/formStore';
-import { useValidation } from '../../store/hooks';
+import { useIssueForm, useValidation } from '../../store/hooks';
+import { useWorkspaceStore } from '../../store/workspaceStore';
 import { ElementCard } from './ElementCard';
 import { ElementDialog } from './ElementDialog';
 import { TypePickerModal } from './TypePickerModal';
@@ -32,9 +32,9 @@ type DialogState =
   | null;
 
 export function ElementList() {
-  const elements = useFormStore((state) => state.elements);
-  const { addElement, updateElement, removeElement, duplicateElement, moveElement } =
-    useFormStore.getState();
+  const { uid: templateUid, elements } = useIssueForm();
+  const { addElement, updateElement, removeElement, duplicateElement, moveElement, setActive } =
+    useWorkspaceStore.getState();
   const issues = useValidation();
   const [dialog, setDialog] = useState<DialogState>(null);
 
@@ -62,6 +62,8 @@ export function ElementList() {
             size="compact-xs"
             variant="light"
             onClick={() => {
+              // The user may have switched to another template in the meantime.
+              setActive(templateUid);
               addElement(element, index);
               notifications.hide(id);
             }}

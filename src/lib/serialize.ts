@@ -1,5 +1,5 @@
 import { Document, isMap, isSeq, YAMLSeq } from 'yaml';
-import type { FormElement, IssueForm } from './types';
+import type { ChooserConfig, FormElement, IssueForm } from './types';
 
 type Plain = Record<string, unknown>;
 
@@ -103,4 +103,24 @@ export function elementToYaml(element: FormElement): string {
     blockQuote: 'literal',
     flowCollectionPadding: false,
   });
+}
+
+/** Generates `config.yml` for the template chooser. */
+export function configToYaml(config: ChooserConfig): string {
+  const out: Plain = { blank_issues_enabled: config.blankIssuesEnabled };
+  if (config.contactLinks.length > 0) {
+    out.contact_links = config.contactLinks.map(({ name, url, about }) => ({
+      name,
+      url: url.trim(),
+      about,
+    }));
+  }
+  const doc = new Document(out);
+  const links = doc.get('contact_links', true);
+  if (links instanceof YAMLSeq) {
+    links.items.forEach((item, index) => {
+      if (index > 0 && isMap(item)) item.spaceBefore = true;
+    });
+  }
+  return doc.toString({ lineWidth: 0, blockQuote: 'literal', flowCollectionPadding: false });
 }

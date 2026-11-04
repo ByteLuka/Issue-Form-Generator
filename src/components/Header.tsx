@@ -1,14 +1,4 @@
-import {
-  ActionIcon,
-  Badge,
-  Button,
-  Group,
-  Menu,
-  Text,
-  ThemeIcon,
-  Title,
-  Tooltip,
-} from '@mantine/core';
+import { ActionIcon, Badge, Button, Group, Text, ThemeIcon, Title, Tooltip } from '@mantine/core';
 import { useDisclosure, useMediaQuery } from '@mantine/hooks';
 import { modals } from '@mantine/modals';
 import {
@@ -19,38 +9,32 @@ import {
   IconTemplate,
   IconTrash,
 } from '@tabler/icons-react';
-import { createEmptyForm } from '../lib/elements';
-import { STARTER_TEMPLATES, type StarterTemplate } from '../lib/templates';
-import { useFormStore } from '../store/formStore';
-import { useIsFormEmpty } from '../store/hooks';
+import { useIsWorkspaceEmpty } from '../store/hooks';
+import { useWorkspaceStore } from '../store/workspaceStore';
 import { ColorSchemeToggle } from './ColorSchemeToggle';
 import { ImportModal } from './ImportModal';
-
-/** Asks before throwing away the current form. Runs `action` directly if there is nothing to lose. */
-function confirmReplace(isEmpty: boolean, title: string, action: () => void) {
-  if (isEmpty) {
-    action();
-    return;
-  }
-  modals.openConfirmModal({
-    title,
-    children: <Text size="sm">This replaces your current form. It cannot be undone.</Text>,
-    labels: { confirm: 'Replace', cancel: 'Cancel' },
-    confirmProps: { color: 'red' },
-    onConfirm: action,
-  });
-}
+import { NewTemplateMenu } from './NewTemplateMenu';
 
 export function Header() {
-  const loadForm = useFormStore((state) => state.loadForm);
-  const isEmpty = useIsFormEmpty();
+  const resetWorkspace = useWorkspaceStore((state) => state.resetWorkspace);
+  const isEmpty = useIsWorkspaceEmpty();
   const [importOpened, importHandlers] = useDisclosure(false);
   const isSmall = useMediaQuery('(max-width: 48em)');
 
-  const applyTemplate = (template: StarterTemplate) =>
-    confirmReplace(isEmpty, `Start from "${template.label}"?`, () => loadForm(template.create()));
-
-  const reset = () => confirmReplace(false, 'Clear the form?', () => loadForm(createEmptyForm()));
+  const reset = () => {
+    if (isEmpty) return;
+    modals.openConfirmModal({
+      title: 'Clear the workspace?',
+      children: (
+        <Text size="sm">
+          All templates and the config.yml settings are removed. This cannot be undone.
+        </Text>
+      ),
+      labels: { confirm: 'Clear', cancel: 'Cancel' },
+      confirmProps: { color: 'red' },
+      onConfirm: resetWorkspace,
+    });
+  };
 
   return (
     <Group h="100%" px={{ base: 'xs', sm: 'md' }} justify="space-between" wrap="nowrap" gap="xs">
@@ -84,35 +68,22 @@ export function Header() {
       </Group>
 
       <Group gap="xs" wrap="nowrap">
-        <Menu position="bottom-end" width={280}>
-          <Menu.Target>
-            {isSmall ? (
-              <ActionIcon variant="default" size="md" aria-label="Templates">
-                <IconTemplate size={16} />
-              </ActionIcon>
-            ) : (
-              <Button
-                variant="default"
-                size="xs"
-                leftSection={<IconTemplate size={16} />}
-                rightSection={<IconChevronDown size={14} />}
-              >
-                Templates
-              </Button>
-            )}
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Label>Start from a template</Menu.Label>
-            {STARTER_TEMPLATES.map((template) => (
-              <Menu.Item key={template.key} onClick={() => applyTemplate(template)}>
-                <Text size="sm">{template.label}</Text>
-                <Text size="xs" c="dimmed">
-                  {template.description}
-                </Text>
-              </Menu.Item>
-            ))}
-          </Menu.Dropdown>
-        </Menu>
+        <NewTemplateMenu>
+          {isSmall ? (
+            <ActionIcon variant="default" size="md" aria-label="New template">
+              <IconTemplate size={16} />
+            </ActionIcon>
+          ) : (
+            <Button
+              variant="default"
+              size="xs"
+              leftSection={<IconTemplate size={16} />}
+              rightSection={<IconChevronDown size={14} />}
+            >
+              New template
+            </Button>
+          )}
+        </NewTemplateMenu>
 
         {isSmall ? (
           <Tooltip label="Import YAML">
@@ -136,8 +107,14 @@ export function Header() {
           </Button>
         )}
 
-        <Tooltip label="Clear form">
-          <ActionIcon variant="default" size="md" aria-label="Clear form" onClick={reset}>
+        <Tooltip label="Clear workspace">
+          <ActionIcon
+            variant="default"
+            size="md"
+            aria-label="Clear workspace"
+            onClick={reset}
+            disabled={isEmpty}
+          >
             <IconTrash size={16} />
           </ActionIcon>
         </Tooltip>
@@ -161,11 +138,7 @@ export function Header() {
         )}
       </Group>
 
-      <ImportModal
-        opened={importOpened}
-        onClose={importHandlers.close}
-        onImport={(form) => confirmReplace(isEmpty, 'Import this form?', () => loadForm(form))}
-      />
+      <ImportModal opened={importOpened} onClose={importHandlers.close} />
     </Group>
   );
 }

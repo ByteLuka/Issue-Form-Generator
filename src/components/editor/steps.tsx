@@ -31,6 +31,7 @@ import type {
 } from '../../lib/types';
 import { UPLOAD_EXTENSIONS } from '../../lib/validate';
 import { Markdown } from '../Markdown';
+import { MONO_INPUT } from '../inputStyles';
 
 export interface StepProps<T extends FormElement> {
   element: T;
@@ -65,7 +66,7 @@ export function MarkdownStep({ element, onChange, errors }: StepProps<MarkdownEl
           autosize
           minRows={6}
           maxRows={16}
-          ff="monospace"
+          classNames={MONO_INPUT}
           value={element.value}
           error={errors.value}
           onChange={(e) => onChange({ ...element, value: e.currentTarget.value })}
@@ -111,7 +112,7 @@ export function BasicsStep({ element, onChange, errors, idTouched, onIdTouched }
         label="Id"
         description="Optional but recommended. Letters, numbers, - and _. Lets you prefill the field via URL (?id=value)."
         placeholder="what-happened"
-        ff="monospace"
+        classNames={MONO_INPUT}
         value={element.id}
         error={errors.id}
         onChange={(e) => {

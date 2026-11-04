@@ -25,6 +25,7 @@ export default defineConfig({
     rolldownOptions: {
       output: {
         // Separate vendor chunks so browsers keep them cached across app deployments.
+        // JSZip stays out of "vendor" so it is only loaded when a zip is downloaded.
         codeSplitting: {
           groups: [
             {
@@ -33,7 +34,7 @@ export default defineConfig({
               priority: 3,
             },
             { name: 'mantine', test: /node_modules[\\/]@mantine[\\/]/, priority: 2 },
-            { name: 'vendor', test: /node_modules[\\/]/, priority: 1 },
+            { name: 'vendor', test: /node_modules[\\/](?!jszip[\\/])/, priority: 1 },
           ],
         },
       },
